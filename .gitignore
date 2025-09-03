@@ -1,0 +1,10 @@
+node_modules/
+.next
+tsconfig.tsbuildinfo
+dist
+coverage
+.env*
+.DS_Store
+.idea
+.vscode
+*.tgz
