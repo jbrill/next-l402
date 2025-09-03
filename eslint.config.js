@@ -31,12 +31,15 @@ export default [
       '@typescript-eslint': typescript,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { 
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-        args: 'after-used',
-        vars: 'local'
-      }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          vars: 'local',
+        },
+      ],
       '@typescript-eslint/no-explicit-any': 'warn',
       'no-undef': 'error',
       'no-unused-vars': 'off', // Use TypeScript version instead

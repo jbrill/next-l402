@@ -1,15 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { MacaroonsBuilder, MacaroonsVerifier } from 'macaroons.js';
-import {
-  L402MiddlewareOptions,
-  L402Token,
-  L402Error,
-  Caveat,
-  CaveatType,
-} from './types';
+import { L402Token, Caveat, CaveatType } from './types';
 import { validateCaveats } from './caveats';
-
 
 /**
  * Extracts an L402 token from the Authorization header
@@ -84,7 +77,8 @@ export const createMacaroonIdentifier = (paymentHash: string): Buffer => {
 export const validateToken = async (
   req: NextRequest,
   token: L402Token,
-  options: Pick<L402MiddlewareOptions, 'secretKey' | 'caveats'>
+  secretKey: Buffer,
+  caveats: Caveat[] = []
 ): Promise<boolean> => {
   try {
     // Deserialize the macaroon
@@ -101,9 +95,7 @@ export const validateToken = async (
       verifier.satisfyExact(caveatStr);
     });
 
-    const isSignatureValid = verifier.isValid(
-      options.secretKey.toString('hex')
-    );
+    const isSignatureValid = verifier.isValid(secretKey.toString('hex'));
     if (!isSignatureValid) {
       return false;
     }
@@ -149,7 +141,7 @@ export const validateToken = async (
     }
 
     // Validate all caveats (convert from caveat packets to Caveat objects)
-    const caveats: Caveat[] = caveatPackets
+    const caveatObjects: Caveat[] = caveatPackets
       .filter((c) => !c.rawValue?.toString().includes('payment_hash'))
       .map((c) => {
         const caveatStr = c.rawValue?.toString() || '';
@@ -163,85 +155,12 @@ export const validateToken = async (
       })
       .filter((c) => c.type && c.value);
 
-    if (options.caveats?.length) {
-      return validateCaveats(req, [...caveats, ...options.caveats]);
+    if (caveats?.length) {
+      return validateCaveats(req, [...caveatObjects, ...caveats]);
     }
 
-    return validateCaveats(req, caveats);
+    return validateCaveats(req, caveatObjects);
   } catch {
     return false;
   }
-};
-
-/**
- * Creates a route matcher function
- */
-export const createRouteMatcher = (
-  patterns: string[]
-): ((req: NextRequest) => boolean) => {
-  return (req: NextRequest) => {
-    const path = req.nextUrl.pathname;
-    return patterns.some((pattern) => {
-      // Convert glob pattern to regex
-      const regexPattern = pattern.replace(/\*/g, '.*').replace(/\//g, '\\/');
-
-      const regex = new RegExp(`^${regexPattern}$`);
-      return regex.test(path);
-    });
-  };
-};
-
-/**
- * L402 middleware for Next.js
- */
-export const l402 = (options: L402MiddlewareOptions) => {
-  if (!options.secretKey) {
-    throw new Error('Secret key is required for L402 middleware');
-  }
-
-  const config = {
-    matcher: options.matcher || (() => true),
-    caveats: options.caveats || [],
-    secretKey: options.secretKey,
-    challengeEndpoint: options.challengeEndpoint || '/api/l402/challenge',
-    location: options.location,
-  };
-
-  return async (req: NextRequest): Promise<NextResponse> => {
-    if (!config.matcher(req)) {
-      return NextResponse.next();
-    }
-
-    try {
-      const token = extractTokenFromHeader(req);
-
-      if (token && (await validateToken(req, token, config))) {
-        return NextResponse.next();
-      }
-
-      // No valid token - return instructions to get challenge
-      const routeKey = req.nextUrl.pathname;
-      return new NextResponse(
-        `Payment Required - Visit ${config.challengeEndpoint}?route=${encodeURIComponent(routeKey)} to generate payment challenge`,
-        {
-          status: 402,
-          headers: {
-            'Content-Type': 'text/plain',
-          },
-        }
-      );
-    } catch (error) {
-      if (error instanceof L402Error) {
-        return new NextResponse(error.message, {
-          status: error.statusCode,
-          headers: { 'Content-Type': 'text/plain' },
-        });
-      }
-
-      return new NextResponse('Internal Server Error', {
-        status: 500,
-        headers: { 'Content-Type': 'text/plain' },
-      });
-    }
-  };
 };

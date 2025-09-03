@@ -1,10 +1,10 @@
-// Export middleware (lightweight, crypto-only)
+// Export token utilities
 export {
-  l402,
-  createRouteMatcher,
   validateToken,
   extractTokenFromHeader,
-} from './middleware';
+  createMacaroonIdentifier,
+  createWwwAuthenticateHeader,
+} from './token-utils';
 
 // Export challenge handler (handles Lightning operations)
 export {

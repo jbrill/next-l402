@@ -32,14 +32,6 @@ export interface Caveat {
   validator?: (req: NextRequest, caveatValue: any) => boolean;
 }
 
-export interface L402MiddlewareOptions {
-  matcher?: (req: NextRequest) => boolean;
-  caveats?: Caveat[];
-  secretKey: Buffer;
-  challengeEndpoint?: string;
-  location?: string;
-}
-
 export interface L402ChallengeOptions {
   lightning: LightningClient;
   priceSats?: number;

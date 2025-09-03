@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { L402ServerOptions, L402Auth, NextHandler, L402Token } from '../types';
-import { extractTokenFromHeader, validateToken } from '../middleware';
+import { extractTokenFromHeader, validateToken } from '../token-utils';
 import { createChallengeResponse } from '../challenge';
 import { createMockLightningClient } from '../lightning/mock';
 
@@ -39,7 +39,12 @@ export const l402Server = (options: L402ServerOptions = {}) => {
         token = extractTokenFromHeader(req);
 
         if (token) {
-          tokenValidated = await validateToken(req, token, config);
+          tokenValidated = await validateToken(
+            req,
+            token,
+            config.secretKey,
+            config.caveats
+          );
           if (tokenValidated) {
             return;
           }

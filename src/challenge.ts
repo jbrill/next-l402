@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   createWwwAuthenticateHeader,
   createMacaroonIdentifier,
-} from './middleware';
+} from './token-utils';
 import { L402ChallengeOptions, L402Challenge, Caveat } from './types';
 import { l402Cache, L402CachedChallenge, L402Session } from './cache';
 import { MacaroonsBuilder } from 'macaroons.js';

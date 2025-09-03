@@ -1,15 +1,17 @@
 // src/index.test.ts
-jest.mock('./lightning/lnd');
 import * as lib from './index';
 
 describe('Index exports', () => {
   test('exports core functionality', () => {
-    // Check middleware exports
-    expect(lib.l402).toBeDefined();
-    expect(lib.createRouteMatcher).toBeDefined();
+    // Check token utility exports
+    expect(lib.validateToken).toBeDefined();
+    expect(lib.extractTokenFromHeader).toBeDefined();
+    expect(lib.createMacaroonIdentifier).toBeDefined();
+    expect(lib.createWwwAuthenticateHeader).toBeDefined();
 
     // Check lightning exports
-    expect(lib.createLightningClient).toBeDefined();
+    expect(lib.createRestLightningClient).toBeDefined();
+    expect(lib.createMockLightningClient).toBeDefined();
 
     // Check caveat exports
     expect(lib.createExpirationCaveat).toBeDefined();

@@ -1,17 +1,15 @@
 import { NextRequest } from 'next/server';
 import { l402Server, withL402 } from './index';
 
-// Mock the lightning module to avoid the LND connection error
-jest.mock('../lightning/lnd', () => ({
-  createLightningClient: jest.fn().mockImplementation(() => ({
-    createInvoice: jest.fn().mockResolvedValue({
-      paymentHash: 'test_hash',
-      paymentRequest: 'test_invoice',
-      amountSats: 100,
-    }),
-    verifyPayment: jest.fn().mockResolvedValue(true),
-  })),
-}));
+// Mock lightning client for testing
+const mockLightningClient = {
+  createInvoice: jest.fn().mockResolvedValue({
+    paymentHash: 'test_hash',
+    paymentRequest: 'test_invoice',
+    amountSats: 100,
+  }),
+  verifyPayment: jest.fn().mockResolvedValue(true),
+};
 
 // Skip tests that are causing problems
 // Use simple assertions that don't require full mocking
