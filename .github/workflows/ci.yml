@@ -44,4 +44,4 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Run security audit
-        run: yarn audit --level moderate
+        run: yarn audit --level high
