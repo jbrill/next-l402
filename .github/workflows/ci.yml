@@ -44,4 +44,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run security audit
-        run: yarn audit --level high
+        run: |
+          yarn audit --level moderate --json > audit.json || true
+          if grep -q '"type":"auditAdvisory"' audit.json && grep -q '"severity":"moderate\|high\|critical"' audit.json; then
+            echo "Found moderate+ severity vulnerabilities"
+            yarn audit --level moderate
+            exit 1
+          else
+            echo "No moderate+ vulnerabilities found"
+          fi
