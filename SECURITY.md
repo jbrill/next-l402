@@ -18,18 +18,21 @@ If you discover a security vulnerability in next-l402, please report it responsi
 ## Security Considerations
 
 ### Lightning Network Security
+
 - Always use TLS certificates when connecting to LND
 - Store macaroons securely and rotate them regularly
 - Validate all Lightning Network responses
 - Use testnet for development and testing
 
 ### Authentication Security
+
 - Macaroons are cryptographically signed tokens
 - Preimage validation ensures payment proof
 - Caveats provide fine-grained access control
 - Secret keys should be cryptographically random
 
 ### Environment Variables
+
 - Never commit `.env` files to version control
 - Use secure key management in production
 - Rotate credentials regularly

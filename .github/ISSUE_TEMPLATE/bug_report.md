@@ -11,6 +11,7 @@ A clear and concise description of what the bug is.
 
 **To Reproduce**
 Steps to reproduce the behavior:
+
 1. Configure L402 middleware with '...'
 2. Make request to '....'
 3. See error
@@ -19,6 +20,7 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Environment:**
+
 - Node.js version: [e.g. 18.x]
 - Next.js version: [e.g. 15.x]
 - next-l402 version: [e.g. 0.1.0]

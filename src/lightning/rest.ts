@@ -22,10 +22,12 @@ export const createRestLightningClient = (
 
   const makeRestRequest = async (path: string, method = 'GET', body?: any) => {
     const url = `${restConfig.host}${path}`;
-    
+
     // Convert base64 macaroon to hex for REST API
-    const macaroonHex = Buffer.from(restConfig.macaroon!, 'base64').toString('hex');
-    
+    const macaroonHex = Buffer.from(restConfig.macaroon!, 'base64').toString(
+      'hex'
+    );
+
     const options: RequestInit = {
       method,
       headers: {
@@ -44,7 +46,7 @@ export const createRestLightningClient = (
     }
 
     const response = await fetch(url, options);
-    
+
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`REST API error: ${response.status} ${errorText}`);
@@ -56,17 +58,22 @@ export const createRestLightningClient = (
   return {
     async createInvoice(amountSats: number, memo?: string): Promise<Invoice> {
       try {
-        
         const invoiceRequest = {
           value: amountSats.toString(),
           memo: memo || 'L402 payment',
         };
 
-        const result = await makeRestRequest('/v1/invoices', 'POST', invoiceRequest) as any;
+        const result = (await makeRestRequest(
+          '/v1/invoices',
+          'POST',
+          invoiceRequest
+        )) as any;
 
         // Convert r_hash from base64 to hex for consistency
-        const paymentHashHex = Buffer.from(result.r_hash, 'base64').toString('hex');
-        
+        const paymentHashHex = Buffer.from(result.r_hash, 'base64').toString(
+          'hex'
+        );
+
         return {
           paymentHash: paymentHashHex,
           paymentRequest: result.payment_request,
@@ -81,9 +88,11 @@ export const createRestLightningClient = (
 
     async verifyPayment(paymentHash: string): Promise<boolean> {
       try {
-        const result = await makeRestRequest(`/v1/invoice/${paymentHash}`) as any;
+        const result = (await makeRestRequest(
+          `/v1/invoice/${paymentHash}`
+        )) as any;
         return result.settled === true;
-      } catch (error) {
+      } catch {
         return false;
       }
     },

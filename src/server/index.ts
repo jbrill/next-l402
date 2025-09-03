@@ -1,10 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { L402ServerOptions, L402Auth, NextHandler, L402Token } from '../types';
-import {
-  extractTokenFromHeader,
-  validateToken,
-} from '../middleware';
+import { extractTokenFromHeader, validateToken } from '../middleware';
 import { createChallengeResponse } from '../challenge';
 import { createMockLightningClient } from '../lightning/mock';
 
@@ -19,7 +16,8 @@ export const l402Server = (options: L402ServerOptions = {}) => {
     lightning: options.lightning || createMockLightningClient(),
     priceSats: options.priceSats || DEFAULT_PRICE_SATS,
     caveats: options.caveats || [],
-    secretKey: options.secretKey || Buffer.from(uuidv4().replace(/-/g, ''), 'hex'),
+    secretKey:
+      options.secretKey || Buffer.from(uuidv4().replace(/-/g, ''), 'hex'),
     location: options.location,
   };
 

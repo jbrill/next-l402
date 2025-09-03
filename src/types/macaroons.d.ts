@@ -1,3 +1,4 @@
+/* eslint-disable */
 declare module 'macaroons.js' {
   export class MacaroonsBuilder {
     static create(

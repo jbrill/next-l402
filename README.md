@@ -195,6 +195,7 @@ npm test
 ## Examples
 
 Check out the `/examples` directory for more usage patterns:
+
 - Basic middleware setup
 - API route protection
 - Custom Lightning clients

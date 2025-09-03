@@ -16,7 +16,8 @@
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\"",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --fix"
   },
   "repository": {
     "type": "git",
@@ -56,6 +57,7 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.34.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
     "@types/node-cache": "^4.2.5",

@@ -3,18 +3,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { MacaroonsBuilder, MacaroonsVerifier } from 'macaroons.js';
 import {
   L402MiddlewareOptions,
-  L402ChallengeOptions,
   L402Token,
   L402Error,
-  L402Challenge,
   Caveat,
   CaveatType,
 } from './types';
-import { createExpirationCaveat, validateCaveats } from './caveats';
+import { validateCaveats } from './caveats';
 
-// Default configuration values
-const DEFAULT_PRICE_SATS = 100;
-const DEFAULT_TOKEN_VALIDITY_SECONDS = 24 * 60 * 60; // 24 hours
 
 /**
  * Extracts an L402 token from the Authorization header
@@ -28,7 +23,7 @@ export const extractTokenFromHeader = (req: NextRequest): L402Token | null => {
 
   const tokenPart = authHeader.substring(5);
   const colonIndex = tokenPart.indexOf(':');
-  
+
   if (colonIndex === -1) {
     return null;
   }
@@ -64,22 +59,24 @@ export const createMacaroonIdentifier = (paymentHash: string): Buffer => {
   // version (2 bytes) + user_id (32 bytes) + payment_hash (32 bytes)
   const version = Buffer.alloc(2);
   version.writeUInt16BE(0, 0); // Version 0
-  
+
   // Generate a random 32-byte user ID
   const userId = Buffer.alloc(32);
   const uuidBytes = Buffer.from(uuidv4().replace(/-/g, ''), 'hex');
   uuidBytes.copy(userId, 0, 0, Math.min(uuidBytes.length, 32));
-  
+
   // If UUID is shorter than 32 bytes, fill with random bytes
   if (uuidBytes.length < 32) {
-    Buffer.from(uuidv4().replace(/-/g, ''), 'hex').copy(userId, uuidBytes.length);
+    Buffer.from(uuidv4().replace(/-/g, ''), 'hex').copy(
+      userId,
+      uuidBytes.length
+    );
   }
-  
+
   const paymentHashBuffer = Buffer.from(paymentHash, 'hex');
-  
+
   return Buffer.concat([version, userId, paymentHashBuffer]);
 };
-
 
 /**
  * Validates an L402 token with proper cryptographic verification
@@ -89,23 +86,24 @@ export const validateToken = async (
   token: L402Token,
   options: Pick<L402MiddlewareOptions, 'secretKey' | 'caveats'>
 ): Promise<boolean> => {
-  
   try {
     // Deserialize the macaroon
     const macaroon = MacaroonsBuilder.deserialize(token.macaroon);
 
     // Verify macaroon signature with the provided secret key
     const verifier = new MacaroonsVerifier(macaroon);
-    
+
     // Satisfy all caveats before verifying signature
     const caveatPackets = macaroon.caveatPackets || [];
-    
+
     caveatPackets.forEach((caveat) => {
       const caveatStr = caveat.rawValue.toString();
       verifier.satisfyExact(caveatStr);
     });
-    
-    const isSignatureValid = verifier.isValid(options.secretKey.toString('hex'));
+
+    const isSignatureValid = verifier.isValid(
+      options.secretKey.toString('hex')
+    );
     if (!isSignatureValid) {
       return false;
     }
@@ -115,7 +113,7 @@ export const validateToken = async (
       const caveatStr = c.rawValue?.toString() || '';
       return caveatStr.includes('payment_hash');
     });
-    
+
     if (!paymentHashCaveat) {
       return false;
     }
@@ -126,19 +124,24 @@ export const validateToken = async (
     if (!paymentHashMatch) {
       return false;
     }
-    
+
     const paymentHash = paymentHashMatch[1].trim();
 
     // Verify preimage matches payment hash using Web Crypto API
     let preimageForHash: Uint8Array;
-    if (/^[0-9a-fA-F]+$/.test(token.preimage) && token.preimage.length % 2 === 0) {
+    if (
+      /^[0-9a-fA-F]+$/.test(token.preimage) &&
+      token.preimage.length % 2 === 0
+    ) {
       preimageForHash = new Uint8Array(Buffer.from(token.preimage, 'hex'));
     } else {
       preimageForHash = new TextEncoder().encode(token.preimage);
     }
-    
+
     const hashBuffer = await crypto.subtle.digest('SHA-256', preimageForHash);
-    const computedPaymentHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const computedPaymentHash = Array.from(new Uint8Array(hashBuffer))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
     const paymentHashHex = Buffer.from(paymentHash, 'base64').toString('hex');
 
     if (computedPaymentHash !== paymentHashHex) {
@@ -150,7 +153,9 @@ export const validateToken = async (
       .filter((c) => !c.rawValue?.toString().includes('payment_hash'))
       .map((c) => {
         const caveatStr = c.rawValue?.toString() || '';
-        const [type, value] = caveatStr.split(' = ').map((s: string) => s.trim());
+        const [type, value] = caveatStr
+          .split(' = ')
+          .map((s: string) => s.trim());
         return {
           type: type as CaveatType,
           value: value,
@@ -163,7 +168,7 @@ export const validateToken = async (
     }
 
     return validateCaveats(req, caveats);
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -202,7 +207,6 @@ export const l402 = (options: L402MiddlewareOptions) => {
     location: options.location,
   };
 
-
   return async (req: NextRequest): Promise<NextResponse> => {
     if (!config.matcher(req)) {
       return NextResponse.next();
@@ -217,14 +221,16 @@ export const l402 = (options: L402MiddlewareOptions) => {
 
       // No valid token - return instructions to get challenge
       const routeKey = req.nextUrl.pathname;
-      return new NextResponse(`Payment Required - Visit ${config.challengeEndpoint}?route=${encodeURIComponent(routeKey)} to generate payment challenge`, {
-        status: 402,
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-      });
+      return new NextResponse(
+        `Payment Required - Visit ${config.challengeEndpoint}?route=${encodeURIComponent(routeKey)} to generate payment challenge`,
+        {
+          status: 402,
+          headers: {
+            'Content-Type': 'text/plain',
+          },
+        }
+      );
     } catch (error) {
-
       if (error instanceof L402Error) {
         return new NextResponse(error.message, {
           status: error.statusCode,

@@ -1,10 +1,19 @@
 // Export middleware (lightweight, crypto-only)
-export { l402, createRouteMatcher, validateToken, extractTokenFromHeader } from './middleware';
+export {
+  l402,
+  createRouteMatcher,
+  validateToken,
+  extractTokenFromHeader,
+} from './middleware';
 
 // Export challenge handler (handles Lightning operations)
-export { createChallengeHandler, markPaymentComplete, createChallengeResponse } from './challenge';
+export {
+  createChallengeHandler,
+  markPaymentComplete,
+  createChallengeResponse,
+} from './challenge';
 
-// Export Lightning clients  
+// Export Lightning clients
 export { createRestLightningClient } from './lightning/rest';
 export { createMockLightningClient } from './lightning/mock';
 
